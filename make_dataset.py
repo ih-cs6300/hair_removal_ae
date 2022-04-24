@@ -1,3 +1,5 @@
+# modified to make masks to go with hair and hairless image pairs
+
 import os
 from os.path import join
 import numpy as np
@@ -27,13 +29,27 @@ def hair_remove(image):
     
     return final_image
 
-all_images = glob.glob(join(BASE_PATH, "*.jpg"))
+def get_mask(im):
+    kernel = cv2.getStructuringElement(1,(17,17))
+    grayScale = cv2.cvtColor(im, cv2.COLOR_RGB2GRAY)
+    blackhat = cv2.morphologyEx(grayScale, cv2.MORPH_BLACKHAT, kernel)
+    ret,threshold = cv2.threshold(blackhat,30,255,cv2.THRESH_BINARY)
+    mask = threshold.astype(np.float32)          #cv2.normalize(threshold, threshold, 0, 1., norm_type=cv2.NORM_MINMAX).astype(np.float32)
+    return mask
+
+all_images = glob.glob(join(BASE_PATH, "*R.jpg"))
 
 for fname in all_images:
     bname = basename(fname)
-    image = cv2.imread(fname)
-    image_resize = cv2.resize(image,(1024,1024))
-    no_hair = hair_remove(image_resize)
-    no_hair_512 = cv2.resize(no_hair, (512, 512))
-    new_name = bname.split(".")[0] + 'R' + ".jpg"
-    cv2.imwrite(join(BASE_PATH, new_name), no_hair_512)
+    orig_fname = bname.split(".")[0][:-1]
+    mask_name = orig_fname + "M" + ".jpg"
+    orig_fname += ".jpg"
+    image = cv2.imread(join(BASE_PATH, orig_fname))
+    mask = get_mask(image)
+    cv2.imwrite(join(BASE_PATH, mask_name), mask)
+
+    #image_resize = cv2.resize(image,(1024,1024))
+    #no_hair = hair_remove(image_resize)
+    #no_hair_512 = cv2.resize(no_hair, (512, 512))
+    #new_name = bname.split(".")[0] + 'R' + ".jpg"
+    #cv2.imwrite(join(BASE_PATH, new_name), no_hair_512)

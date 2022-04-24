@@ -2,3 +2,4 @@ assets/
 .ipynb_checkpoints/
 jpeg-melanoma-512x512/
 variables/
+*.pb
